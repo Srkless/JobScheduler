@@ -78,21 +78,21 @@ public class Job extends Thread implements Comparable<Job> {
         }
     }
 
-    // private void checkStatus() {
-    //     String state = rabbitMQ.read(jobName);
-    //     if (state != null) {
-    //         if (state.equals("PAUSED") && currentStatus == Status.RUNNING) {
-    //             currentStatus = Status.PAUSED;
-    //             jobController.execute("PAUSE", this);
-    //         } else if (state.equals("STOPPED")) {
-    //             currentStatus = Status.STOPPED;
-    //             jobController.execute("STOP", this);
-    //         } else if (state.equals("RUNNING") && currentStatus == Status.PAUSED) {
-    //             currentStatus = Status.RUNNING;
-    //             jobController.execute("RESUME", this);
-    //         }
-    //     }
-    // }
+    private void checkStatus() {
+        String state = rabbitMQ.read(jobName);
+        if (state != null) {
+            if (state.equals("PAUSED") && currentStatus == Status.RUNNING) {
+                currentStatus = Status.PAUSED;
+                jobController.execute("PAUSE", this);
+            } else if (state.equals("STOPPED")) {
+                currentStatus = Status.STOPPED;
+                jobController.execute("STOP", this);
+            } else if (state.equals("RUNNING") && currentStatus == Status.PAUSED) {
+                currentStatus = Status.RUNNING;
+                jobController.execute("RESUME", this);
+            }
+        }
+    }
 
     @Override
     public void run() {
@@ -104,6 +104,7 @@ public class Job extends Thread implements Comparable<Job> {
             String line;
             try {
                 while ((line = reader.readLine()) != null) {
+                    checkStatus();
                     System.out.println(line);
                     if (i++ == 5) jobController.execute("PAUSE", this);
                 }
