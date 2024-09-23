@@ -1,6 +1,5 @@
 package jobs;
 
-
 public class DemoJob {
     private String jobName;
 
@@ -23,8 +22,12 @@ public class DemoJob {
     // }
 
     public static void main(String[] args) {
-        DemoJob job = new DemoJob("DemoJob");
-        for (int i = 0; i < 20; i++) {
+        if (args.length == 0) {
+            System.out.println("Please provide a job name");
+            return;
+        }
+        DemoJob job = new DemoJob(args[0]);
+        for (int i = 0; i < 13; i++) {
             // job.checkStatus();
             // if (job.currentStatus == Status.STOPPED) {
             //     return;

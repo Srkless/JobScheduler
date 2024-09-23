@@ -39,6 +39,7 @@ public class JobController {
     public void stopJob(Job job) {
         job.getRabbitMQ().write("[" + job.getJobName() + "]: " + "STOPPED", job.getJobName());
         job.setStatus(Status.STOPPED);
+        job.getProcess().destroy();
     }
 
     public void resumeJob(Job job) {
