@@ -25,6 +25,11 @@ public class JobScheduler {
         jobQueue.add(job);
     }
 
+    public void removeJob(Job job) {
+        if (job.getProcess() != null) job.stop();
+        jobQueue.remove(job);
+    }
+
     public void startJob(Job job) {
         if (job.getStartTime() != null && LocalDateTime.now().isBefore(job.getStartTime())) {
             Duration waitTime = Duration.between(LocalDateTime.now(), job.getStartTime());
@@ -38,51 +43,111 @@ public class JobScheduler {
         }
     }
 
-    private void executeJobWithTimeout(Job job) {
-        if (runningJobs < maxRunningJobs) {
+    public void pauseJob(Job job) {
+        if (job.getStatus() == Status.RUNNING) {
+            job.pause();
+            runningJobs--;
+            if (runningJobs < 0) runningJobs = 0;
+            job.setStatus(Status.PAUSED);
+            nextJob();
+        }
+        System.out.println("Job " + job.getJobName() + " is paused..." + runningJobs);
+    }
+
+    public void manualPauseJob(Job job) {
+        if (job.getStatus() == Status.RUNNING) {
+            job.pause();
+            runningJobs--;
+            if (runningJobs < 0) runningJobs = 0;
+            job.setStatus(Status.MANUALLY_PAUSED);
+            nextJob();
+        }
+        System.out.println("Job " + job.getJobName() + " is manually paused..." + runningJobs);
+    }
+
+    public void resumeJob(Job job) {
+        if (job.getStatus() == Status.PAUSED
+                || job.getStatus() == Status.WAITING
+                || job.getStatus() == Status.MANUALLY_PAUSED) {
             runningJobs++;
             job.setStatus(Status.RUNNING);
+            job.resume();
+            // executeJobWithTimeout(job);
+        }
+    }
 
-            // Proveri da li je deadline pre isteka vremena trajanja
+    public void stopJob(Job job) {
+        job.stop();
+        runningJobs--;
+        if (runningJobs < 0) runningJobs = 0;
+        jobQueue.remove(job);
+        nextJob();
+    }
+
+    public void executeJobWithTimeout(Job job) {
+        System.out.println("ULAZ: " + job.getJobName() + " " + job.getStatus() + " " + runningJobs);
+
+        if (runningJobs < maxRunningJobs) {
+            System.out.println("Running jobs: " + runningJobs);
             if (LocalDateTime.now().isAfter(job.getEndTime())) {
                 System.out.println(
                         "Job " + job.getJobName() + " missed the deadline. Cancelling...");
-                job.stop(); // Prekini posao jer je promašen deadline
+                job.stop();
                 runningJobs--;
                 return;
             }
 
-            Future<?> future =
-                    threadPool.submit(
-                            () -> {
-                                job.start();
-                                job.setStatus(Status.COMPLETED);
-                                return null;
-                            });
+            if (job.getStatus() == Status.NOT_STARTED) {
+                job.setStatus(Status.RUNNING);
+                runningJobs++;
+                System.out.println("Job " + job.getJobName() + " is running...");
+                Future<?> future =
+                        threadPool.submit(
+                                () -> {
+                                    job.start();
+                                    job.setStatus(Status.COMPLETED);
+                                    runningJobs--;
+                                    if (runningJobs < 0) runningJobs = 0;
+                                    jobQueue.remove(job);
+                                    nextJob();
 
-            // Timeout za prekidanje posla ako ne završi na vreme
-            scheduler.schedule(
-                    () -> {
-                        if (!future.isDone()) {
-                            System.out.println(
-                                    "Job "
-                                            + job.getJobName()
-                                            + " exceeded execution time. Cancelling...");
-                            future.cancel(true); // Prekidanje future task-a
-                            job.stop(); // Prekini i sam proces ako traje predugo
-                        }
-                    },
-                    job.getDuration().toMillis(),
-                    TimeUnit.MILLISECONDS);
-
-            runningJobs--;
-            jobQueue.remove(job);
-            nextJob();
+                                    return null;
+                                });
+                // Timeout za prekidanje posla ako ne završi na vreme
+                scheduler.schedule(
+                        () -> {
+                            if (!future.isDone()) {
+                                System.out.println(
+                                        "Job "
+                                                + job.getJobName()
+                                                + " exceeded execution time. Cancelling...");
+                                future.cancel(true); // Prekidanje future task-a
+                                job.stop(); // Prekini i sam proces ako traje predugo
+                                runningJobs--;
+                                if (runningJobs < 0) runningJobs = 0;
+                            }
+                        },
+                        job.getDuration().toMillis(),
+                        TimeUnit.MILLISECONDS);
+            } else if (job.getStatus() == Status.PAUSED
+                    || job.getStatus() == Status.MANUALLY_PAUSED
+                    || job.getStatus() == Status.WAITING) {
+                resumeJob(job);
+            }
         } else {
             if (scheduleRunningJobs(job)) {
-                startJob(job);
+                if (job.getStatus() == Status.NOT_STARTED) {
+                    startJob(job);
+                } else {
+                    executeJobWithTimeout(job);
+                }
+            } else if (job.getStatus() != Status.NOT_STARTED) {
+                System.out.println("Job " + job.getJobName() + " is waiting...");
+                job.setStatus(Status.WAITING);
+                pauseJob(job);
             }
         }
+        System.out.println("IZLAZ: " + job.getJobName() + " " + job.getStatus());
     }
 
     public boolean scheduleRunningJobs(Job job) {
@@ -97,8 +162,10 @@ public class JobScheduler {
             }
         }
         if (jobToPause != null) {
-            jobToPause.pause();
+            System.out.println("Pausing job: " + jobToPause.getJobName());
+            pauseJob(jobToPause);
             runningJobs--;
+            if (runningJobs < 0) runningJobs = 0;
             return true;
         }
         return false;
@@ -110,27 +177,39 @@ public class JobScheduler {
 
         if (!jobQueue.isEmpty()) {
             for (Job job : jobQueue) {
-                if (nextJob == null) {
-                    nextJob = job;
-                } else if (job.getStatus() == Status.PAUSED
-                        && job.compareTo(nextJob) > highestPriority) {
-                    nextJob = job;
-                    highestPriority = job.compareTo(nextJob);
-                }
+                // if (nextJob == null) {
+                //     nextJob = job;
+                //     System.out.println("Next job: " + nextJob.getJobName());
+                // } else
+                if (job.getStatus() == Status.PAUSED
+                        || job.getStatus() == Status.WAITING
+                        || job.getStatus() == Status.NOT_STARTED)
+                    if (nextJob == null || job.compareTo(nextJob) > highestPriority) {
+                        nextJob = job;
+                        highestPriority = job.compareTo(nextJob);
+                    }
+                // if (job.getStatus() == Status.NOT_STARTED) {
+                //     nextJob = job;
+                // }
             }
             if (nextJob != null) {
-                nextJob.resume();
+                System.out.println("Next job: " + nextJob.getJobName());
+                if (nextJob.getStatus() == Status.NOT_STARTED) {
+                    startJob(nextJob);
+                } else {
+                    resumeJob(nextJob);
+                }
             }
         }
     }
 
-    public static void main(String[] args) {
+    public void startScheduler() {
         Job job1 =
                 new Job(
                         "java src/main/java/jobs/DemoJob.java DemoJob1",
                         "DemoJob1",
                         LocalDateTime.now().plusSeconds(5),
-                        LocalDateTime.now().plusSeconds(15),
+                        LocalDateTime.now().plusSeconds(100),
                         Duration.ofSeconds(100),
                         1);
 
@@ -138,16 +217,53 @@ public class JobScheduler {
                 new Job(
                         "java src/main/java/jobs/DemoJob.java DemoJob2",
                         "DemoJob2",
-                        LocalDateTime.now().plusSeconds(10),
-                        LocalDateTime.now().plusSeconds(15),
-                        Duration.ofSeconds(5),
-                        2);
+                        LocalDateTime.now().plusSeconds(7),
+                        LocalDateTime.now().plusSeconds(100),
+                        Duration.ofSeconds(100),
+                        1);
 
-        JobScheduler scheduler = new JobScheduler(3);
+        JobScheduler scheduler = new JobScheduler(2);
         scheduler.addJob(job1);
         scheduler.addJob(job2);
 
         scheduler.startJob(job1);
         scheduler.startJob(job2);
     }
+
+    // public static void main(String[] args) {
+    //     Job job1 =
+    //             new Job(
+    //                     "java src/main/java/jobs/DemoJob.java DemoJob1",
+    //                     "DemoJob1",
+    //                     LocalDateTime.now().plusSeconds(5),
+    //                     LocalDateTime.now().plusSeconds(15),
+    //                     Duration.ofSeconds(100),
+    //                     1);
+    //
+    //     Job job2 =
+    //             new Job(
+    //                     "java src/main/java/jobs/DemoJob.java DemoJob2",
+    //                     "DemoJob2",
+    //                     LocalDateTime.now().plusSeconds(10),
+    //                     LocalDateTime.now().plusSeconds(15),
+    //                     Duration.ofSeconds(5),
+    //                     2);
+    //
+    //     Job test =
+    //             new Job(
+    //                     "~/test.sh",
+    //                     "Test",
+    //                     LocalDateTime.now().plusSeconds(10),
+    //                     LocalDateTime.now().plusSeconds(15),
+    //                     Duration.ofSeconds(5),
+    //                     2);
+    //     JobScheduler scheduler = new JobScheduler(2);
+    //     scheduler.addJob(job1);
+    //     scheduler.addJob(job2);
+    //     scheduler.addJob(test);
+    //
+    //     scheduler.startJob(job1);
+    //     scheduler.startJob(job2);
+    //     scheduler.startJob(test);
+    // }
 }
