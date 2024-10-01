@@ -25,33 +25,24 @@ public class RabbitMQHandler {
         }
     }
 
-    public String read(String queueName) {
+    public String read(String queneName) throws Exception {
 
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+        // channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+        GetResponse response;
         String lastMessage = null;
-        try {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
-
-            Connection connection = factory.newConnection();
-            Channel channel = connection.createChannel();
-            // channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-
-            GetResponse response;
-            while ((response = channel.basicGet(QUEUE_NAME + queueName, false)) != null) {
-                byte[] body = response.getBody();
-                lastMessage = new String(body, "UTF-8");
-
-                channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
-            }
-
-            // System.out.println(lastMessage);
-
-            channel.close();
-            connection.close();
-
-        } catch (Exception e) {
-            // TODO: handle exception
+        if ((response = channel.basicGet(QUEUE_NAME + queneName, false)) != null) {
+            byte[] body = response.getBody();
+            lastMessage = new String(body, "UTF-8");
+            channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
         }
+
+        channel.close();
+        connection.close();
         if (lastMessage == null) return null;
         return lastMessage;
     }

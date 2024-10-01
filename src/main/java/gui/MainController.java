@@ -5,15 +5,21 @@ import com.jfoenix.controls.JFXToggleButton;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
+import javafx.stage.Stage;
 
+import job.ConvolutionJob;
 import job.Job;
 import job.Status;
 
@@ -21,6 +27,7 @@ import jobScheduler.JobScheduler;
 
 import rabbitmq.RabbitMQHandler;
 
+import java.io.File;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,6 +40,7 @@ public class MainController implements Initializable {
     @FXML private VBox processesVBox;
     @FXML private VBox progressVBox;
     @FXML private JFXButton bCreateJob;
+    @FXML private ScrollPane progressScrollPane;
     private static MainController instance;
 
     RabbitMQHandler rabbitMQ = new RabbitMQHandler();
@@ -44,37 +52,47 @@ public class MainController implements Initializable {
 
     @FXML
     public void createJob() {
-        // FXMLLoader loader = new FXMLLoader();
-        // try {
-        //     Parent root =
-        //
-        // loader.load(getClass().getClassLoader().getResourceAsStream("addJobPage.fxml"));
-        //     Stage stage = new Stage();
-        //     stage.setScene(new Scene(root));
-        //     stage.show();
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
-        Job j1 =
-                new Job(
-                        "java src/main/java/jobs/DemoJob.java DemoJob1 30",
-                        "DemoJob1",
+        FXMLLoader loader = new FXMLLoader();
+        try {
+            Parent root =
+                    loader.load(getClass().getClassLoader().getResourceAsStream("addJobPage.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Job j1 =
+        //         new Job(
+        //                 "java src/main/java/jobs/DemoJob.java DemoJob1 30",
+        //                 "DemoJob1",
+        //                 LocalDateTime.now().plusSeconds(5),
+        //                 LocalDateTime.now().plusSeconds(100),
+        //                 Duration.ofSeconds(100),
+        //                 1);
+        // Job j2 =
+        //         new Job(
+        //                 "java src/main/java/jobs/DemoJob.java DemoJob2 20",
+        //                 "DemoJob2",
+        //                 LocalDateTime.now().plusSeconds(7),
+        //                 LocalDateTime.now().plusSeconds(100),
+        //                 Duration.ofSeconds(100),
+        //                 1);
+        ConvolutionJob j1 =
+                new ConvolutionJob(
+                        "java src/main/java/jobs/Convolution.java",
+                        new File("Images/"),
+                        new File("Output/"),
+                        new File("edgeDetectionKernel.txt"),
+                        "CONV_A",
                         LocalDateTime.now().plusSeconds(5),
                         LocalDateTime.now().plusSeconds(100),
                         Duration.ofSeconds(100),
                         1);
-        Job j2 =
-                new Job(
-                        "java src/main/java/jobs/DemoJob.java DemoJob2 20",
-                        "DemoJob2",
-                        LocalDateTime.now().plusSeconds(7),
-                        LocalDateTime.now().plusSeconds(100),
-                        Duration.ofSeconds(100),
-                        1);
+
         addProcess(j1);
-        addProcess(j2);
-        jobScheduler.addJob(j1);
-        jobScheduler.addJob(j2);
+
+        // addProcess(j2);
     }
 
     public static MainController getInstance() {
@@ -118,6 +136,7 @@ public class MainController implements Initializable {
                                 // Ako je ToggleButton uključen (desno), postavi ProgressBar na 100%
                                 if (job1.getStatus() == Status.NOT_STARTED) {
                                     toggleButton.setDisable(true);
+                                    jobScheduler.addJob(job1);
                                     jobScheduler.startJob(job1);
                                 } else {
                                     jobScheduler.executeJobWithTimeout(job1);
@@ -141,7 +160,7 @@ public class MainController implements Initializable {
 
                                         Platform.runLater(
                                                 () -> {
-                                                    Label progressLabel = new Label(read);
+                                                    Label progressLabel = new Label(read + " ");
                                                     progressLabel.setStyle(
                                                             " -fx-background-color:"
                                                                 + " linear-gradient(to right,"
@@ -153,10 +172,29 @@ public class MainController implements Initializable {
                                                             new javafx.geometry.Insets(
                                                                     0, 0, 0, 15));
 
+                                                    if (progressVBox.getChildren().size() > 500) {
+                                                        // Očistite najstariji element
+                                                        progressVBox
+                                                                .getChildren()
+                                                                .remove(0); // Uklonite prvi element
+                                                    }
                                                     progressVBox.getChildren().add(progressLabel);
+                                                    progressScrollPane.layout();
+                                                    progressScrollPane.setVvalue(1.0);
                                                 });
                                         Double progress =
                                                 (double) job.getProgressStep() / job.getProgress();
+                                        if (progress >= 1) {
+                                            progressBar.getStyleClass().removeAll("progress-bar");
+                                            progressBar
+                                                    .getStyleClass()
+                                                    .add("progress-bar-complete");
+                                        } else {
+                                            progressBar
+                                                    .getStyleClass()
+                                                    .removeAll("progress-bar-complete");
+                                            progressBar.getStyleClass().add("progress-bar");
+                                        }
                                         progressBar.setProgress(progress);
                                     }
                                     ;

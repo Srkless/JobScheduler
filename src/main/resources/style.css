@@ -1,0 +1,228 @@
+.button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f06a73;
+    -fx-border-color: #f06a73;
+    -fx-border-width: 3px;
+}
+
+.button:hover {
+    -fx-background-color: #f06a73;
+    -fx-text-fill: #3e4364;
+}
+
+.text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f06a73;
+    -fx-border-color: #f06a73;
+    -fx-border-width: 0 0 3 0;
+}
+
+.processes-list {
+    -fx-background-color: #30344d;
+    -fx-background-radius: 30;
+    -fx-text-fill: #f06a73;
+}
+
+.scroll-pane {
+    -fx-background-color: transparent; /* svetlo plava pozadina */
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent; /* osigurava da unutrašnjost scrollpane-a takođe ima plavu pozadinu */
+}
+
+.scroll-bar {
+    -fx-background-color: #3e4364; /* plava boja za scroll bar */
+    -fx-background-radius: 5px; /* zaobljeni uglovi za scroll bar */
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #3e4364; /* malo tamnija nijansa plave za thumb */
+    -fx-background-insets: 2; /* mala odstupanja unutar scroll bara */
+    -fx-background-radius: 5px; /* zaobljeni uglovi za thumb */
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #3e4364; /* boja za dugmad na scroll baru */
+    -fx-background-radius: 5px; /* zaobljeni uglovi za dugmad */
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: white; /* plava boja za strelice */
+    -fx-shape: 'm0,0l1,0l0.5,0.5z'; /* definiše trouglasti oblik strelice */
+}
+
+.combo-box > .arrow-button {
+    -fx-padding: 0;
+}
+/**/
+.combo-box > .arrow-button > .arrow {
+    -fx-padding: 0;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: #3e4364;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #f06a73;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: #f0e6d2;
+    -fx-padding: 4 0 4 5;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view .list-cell:filled:selected,
+.combo-box-popup .list-view .list-cell:filled:selected:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f0e6d2;
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #f0e6d2;
+}
+
+.combo-box-base {
+    -fx-background-color: #f06a73;
+    -fx-padding: 0;
+}
+
+/* Ciljanje ScrollBar-a unutar ComboBox-a */
+.combo-box .scroll-bar {
+    -fx-background-color: transparent; /* Pozadina scroll bar-a */
+}
+
+.combo-box .scroll-bar .increment-button, /* Dugme za skrolovanje nadole */
+.combo-box .scroll-bar .decrement-button {
+    /* Dugme za skrolovanje nagore */
+    -fx-background-color: transparent;
+}
+
+.combo-box .scroll-bar .thumb {
+    /* Sam klizač (thumb) */
+    -fx-background-color: #f06a73; /* Boja klizača */
+}
+
+.combo-box .scroll-bar .track {
+    /* Traka po kojoj se klizač pomera */
+    -fx-background-color: transparent; /* Boja trake */
+}
+
+.progress-bar {
+    -fx-border-color: linear-gradient(
+        to right,
+        #e3848a,
+        #ed3b47
+    ); /* Boja progress bara */
+
+    -fx-border-width: 1px;
+}
+.progress-bar .bar {
+    -fx-background-color: linear-gradient(
+        to right,
+        #e3848a,
+        #ed3b47
+    ); /* Boja progress bara */
+}
+.progress-bar-complete .bar {
+    -fx-background-color: linear-gradient(to right, #81c784, #4caf50);
+}
+.progress-bar .track {
+    -fx-background-color: transparent; /* Boja pozadine progress bara */
+}
+
+.check-box .box {
+    -fx-background-color: transparent;
+    -fx-border-color: #3b405f;
+    -fx-border-width: 1px;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
+
+.date-picker {
+    -fx-background-color: transparent; /* Tamna pozadina za ceo DatePicker */
+    -fx-text-fill: white; /* Bela boja teksta */
+}
+
+.date-picker .text-field {
+    -fx-text-fill: #f0e6d2; /* Bela boja teksta */
+}
+
+.date-picker > .arrow-button {
+    -fx-background-color: #f06a73; /* Zelena pozadina dugmeta */
+    -fx-background-radius: 5; /* Uklanjanje zaobljenih ivica */
+}
+
+/* Promena boje ikone kalendara */
+.date-picker > .arrow-button .arrow {
+    -fx-background-color: white; /* Bela boja ikone kalendara */
+}
+
+/* Promena boje ivice dugmeta */
+.date-picker > .arrow-button {
+    -fx-border-color: #f06a73; /* Boja ivice */
+    -fx-border-width: 2px; /* Debljina ivice */
+    -fx-border-radius: 5 5 5 0; /* Zaobljeni ivici */
+    -fx-background-radius: 4; /* Uklanjanje zaobljenih ivica */
+}
+
+.date-picker-popup {
+    -fx-background-color: #f06a73; /* Tamno siva pozadina */
+    -fx-text-fill: #f0e6d2;
+}
+
+/* Promena boje pozadine za dane */
+.date-picker-popup .day-cell {
+    -fx-background-color: #f06a73; /* Još tamnija siva pozadina za dane */
+    -fx-border-color: #f0e6d2; /* Boja granica oko dana */
+    -fx-border-width: 1px; /* Debljina granica oko dana */
+}
+
+/* Promena boje kada je dan izabran */
+.date-picker-popup .day-cell:selected {
+    -fx-background-color: #f0e6d2; /* Zelena boja pozadine za izabrani dan */
+    -fx-text-fill: white; /* Bela boja teksta za izabrani dan */
+}
+
+/* Promena boje kada je dan u fokusu */
+.date-picker-popup .day-cell:focused {
+    -fx-background-color: #3e4364; /* Plava boja pozadine za dan u fokusu */
+    -fx-text-fill: #f0e6d2; /* Bela boja teksta za dan u fokusu */
+}
+
+/* Promena boje kada je dan pod mišem */
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #3e4364; /* Svetlo plava boja pozadine za dan pod mišem */
+    -fx-text-fill: white; /* Crna boja teksta za dan pod mišem */
+}
+
+/* Promena boje za trenutni dan */
+.date-picker-popup .day-cell.today {
+    -fx-border-color: #3e4364; /* Narandžasta granica za trenutni dan */
+    -fx-border-width: 2px; /* Debljina granice za trenutni dan */
+}
+
+/* Promena boje za naziv meseca i godine */
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #f06a73; /* Tamna pozadina za naziv meseca i godine */
+    -fx-text-fill: #ffffff; /* Bela boja teksta za naziv meseca i godine */
+}
+
+/* Promena boje za nazive dana u nedelji */
+.date-picker-popup .weekday-name {
+    -fx-background-color: #f06a73; /* Tamna pozadina za nazive dana u nedelji */
+    -fx-text-fill: #ffffff; /* Bela boja teksta za nazive dana u nedelji */
+}
+
+/* Promena boje za dugme za prethodni i sledeći mesec */
+.date-picker-popup .left-arrow-button,
+.date-picker-popup .right-arrow-button {
+    -fx-background-color: transparent; /* Zelena boja pozadine za dugmad */
+    -fx-text-fill: white; /* Bela boja teksta za dugmad */
+}

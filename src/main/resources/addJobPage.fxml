@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXRadioButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #3E4364;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.AddJobController">
+   <children>
+      <Label alignment="CENTER" layoutX="208.0" layoutY="11.0" prefHeight="83.0" prefWidth="176.0" text="Create Process" textAlignment="CENTER" textFill="#f06a73" wrapText="true">
+         <font>
+            <Font name="JetBrains Mono ExtraBold" size="27.0" />
+         </font>
+      </Label>
+      <VBox layoutX="10.0" layoutY="121.0" prefHeight="104.0" prefWidth="573.0">
+         <children>
+            <HBox>
+               <children>
+                  <VBox>
+                     <children>
+                        <Text fill="#f06a73" strokeType="OUTSIDE" strokeWidth="0.0" text="Job name">
+                           <font>
+                              <Font name="JetBrains Mono Regular" size="13.0" />
+                           </font>
+                        </Text>
+                        <TextField fx:id="jobNameField" stylesheets="@style.css" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <Text fill="#f06a73" strokeType="OUTSIDE" strokeWidth="0.0" text="Command">
+                           <font>
+                              <Font name="JetBrains Mono Regular" size="13.0" />
+                           </font>
+                        </Text>
+                        <TextField fx:id="commandField" stylesheets="@style.css" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="20.0" />
+                     </HBox.margin>
+                  </VBox>
+                  <VBox prefHeight="47.0" prefWidth="83.0">
+                     <children>
+                        <Text fill="#f06a73" strokeType="OUTSIDE" strokeWidth="0.0" text="Priority">
+                           <font>
+                              <Font name="JetBrains Mono Regular" size="13.0" />
+                           </font>
+                        </Text>
+                        <TextField fx:id="priorityField" prefWidth="50.0" promptText="Num" stylesheets="@style.css" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="20.0" />
+                     </HBox.margin>
+                  </VBox>
+                  <VBox>
+                     <children>
+                        <Text fill="#f06a73" strokeType="OUTSIDE" strokeWidth="0.0" text="Duration">
+                           <font>
+                              <Font name="JetBrains Mono Regular" size="13.0" />
+                           </font>
+                        </Text>
+                        <TextField fx:id="durationField" maxWidth="80.0" prefHeight="29.0" prefWidth="80.0" promptText="Seconds" stylesheets="@style.css" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="20.0" />
+                     </HBox.margin>
+                  </VBox>
+               </children>
+            </HBox>
+            <HBox>
+               <children>
+                  <DatePicker fx:id="startDatePicker" minWidth="136.0" prefHeight="29.0" prefWidth="165.0" promptText="Start Date" stylesheets="@style.css">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </DatePicker>
+                  <TextField fx:id="startHourField" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" promptText="  H" stylesheets="@style.css">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </TextField>
+                  <TextField fx:id="startMinuteField" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" promptText="Min" stylesheets="@style.css">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </TextField>
+                  <DatePicker fx:id="deadlinePicker" minWidth="165.0" prefWidth="165.0" promptText="Deadline" stylesheets="@style.css">
+                     <HBox.margin>
+                        <Insets left="20.0" />
+                     </HBox.margin>
+                  </DatePicker>
+                  <TextField fx:id="deadlineHourField" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" promptText="  H" stylesheets="@style.css">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </TextField>
+                  <TextField fx:id="deadlineMinuteField" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" promptText="Min" stylesheets="@style.css">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </TextField>
+               </children>
+               <VBox.margin>
+                  <Insets top="40.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox fx:id="convOptionsHBox">
+               <children>
+                  <JFXButton fx:id="bInputFolder" stylesheets="@style.css" text="Input Folder">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </JFXButton>
+                  <JFXButton fx:id="bChooseKernel" stylesheets="@style.css" text="Kernel">
+                     <HBox.margin>
+                        <Insets left="140.0" />
+                     </HBox.margin>
+                  </JFXButton>
+                  <JFXButton fx:id="bOutputFolder" stylesheets="@style.css" text="Output Folder">
+                     <HBox.margin>
+                        <Insets left="140.0" />
+                     </HBox.margin>
+                  </JFXButton>
+               </children>
+               <VBox.margin>
+                  <Insets top="30.0" />
+               </VBox.margin>
+            </HBox>
+            <JFXButton fx:id="bCreate" onMouseClicked="#createJob" stylesheets="@style.css" text="Create">
+               <VBox.margin>
+                  <Insets left="250.0" top="30.0" />
+               </VBox.margin>
+            </JFXButton>
+         </children>
+      </VBox>
+      <HBox layoutX="23.0" layoutY="79.0">
+         <children>
+            <JFXRadioButton fx:id="radioJob" selected="true" text="Job" textFill="#757575">
+               <selectedColor>
+                  <Color red="0.9372549057006836" green="0.4156862795352936" blue="0.4470588266849518" />
+               </selectedColor>
+               <unSelectedColor>
+                  <Color red="0.4588235318660736" green="0.4588235318660736" blue="0.4588235318660736" />
+               </unSelectedColor>
+               <toggleGroup>
+                  <ToggleGroup fx:id="processType" />
+               </toggleGroup>
+            </JFXRadioButton>
+            <JFXRadioButton fx:id="radioConvJob" text="Convolution" textFill="#757575" toggleGroup="$processType">
+               <selectedColor>
+                  <Color red="0.9372549057006836" green="0.4156862795352936" blue="0.4470588266849518" />
+               </selectedColor>
+               <unSelectedColor>
+                  <Color red="0.4588235318660736" green="0.4588235318660736" blue="0.4588235318660736" />
+               </unSelectedColor>
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </JFXRadioButton>
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>

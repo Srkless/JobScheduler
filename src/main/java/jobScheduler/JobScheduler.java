@@ -49,7 +49,6 @@ public class JobScheduler {
             runningJobs--;
             if (runningJobs < 0) runningJobs = 0;
             job.setStatus(Status.PAUSED);
-            nextJob();
         }
         System.out.println("Job " + job.getJobName() + " is paused..." + runningJobs);
     }
@@ -66,6 +65,7 @@ public class JobScheduler {
     }
 
     public void resumeJob(Job job) {
+        System.out.println("Resuming job: " + job.getJobName());
         if (job.getStatus() == Status.PAUSED
                 || job.getStatus() == Status.WAITING
                 || job.getStatus() == Status.MANUALLY_PAUSED) {
@@ -84,6 +84,8 @@ public class JobScheduler {
         nextJob();
     }
 
+    // BUG: kada se pokrece posao sa zakasnjenjem, a neki vec radi dodje do baga oko
+    // raspodjeljivanja``
     public void executeJobWithTimeout(Job job) {
         System.out.println("ULAZ: " + job.getJobName() + " " + job.getStatus() + " " + runningJobs);
 
@@ -171,6 +173,7 @@ public class JobScheduler {
         return false;
     }
 
+    // BUG: napraviti da sa prioretom zaustavlja ovaj sto ima manji prio
     public void nextJob() {
         int highestPriority = Integer.MIN_VALUE;
         Job nextJob = null;
@@ -181,9 +184,9 @@ public class JobScheduler {
                 //     nextJob = job;
                 //     System.out.println("Next job: " + nextJob.getJobName());
                 // } else
-                if (job.getStatus() == Status.PAUSED
+                if ((job.getStatus() == Status.PAUSED
                         || job.getStatus() == Status.WAITING
-                        || job.getStatus() == Status.NOT_STARTED)
+                        || job.getStatus() == Status.NOT_STARTED))
                     if (nextJob == null || job.compareTo(nextJob) > highestPriority) {
                         nextJob = job;
                         highestPriority = job.compareTo(nextJob);

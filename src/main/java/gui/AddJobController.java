@@ -1,6 +1,7 @@
 package gui;
 
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXRadioButton;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -9,11 +10,18 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
+import job.ConvolutionJob;
 import job.Job;
 
+import java.io.File;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -23,6 +31,12 @@ import java.util.ResourceBundle;
 public class AddJobController implements Initializable {
 
     @FXML private JFXButton bCreate;
+
+    @FXML private JFXButton bInputFolder;
+
+    @FXML private JFXButton bOutputFolder;
+
+    @FXML private JFXButton bChooseKernel;
 
     @FXML private TextField commandField;
 
@@ -44,18 +58,47 @@ public class AddJobController implements Initializable {
 
     @FXML private TextField deadlineMinuteField;
 
+    @FXML private JFXRadioButton radioConvJob;
+
+    @FXML private JFXRadioButton radioJob;
+
+    @FXML private ToggleGroup processType;
+
+    @FXML private VBox jobFieldsVBox;
+
+    @FXML private HBox convOptionsHBox;
+
+    private File inputFolder;
+
+    private File outputFolder;
+
+    private File kernelFile;
+
     @FXML
     private void createJob() {
-        String jobName = jobNameField.getText();
-        String command = commandField.getText();
-        int priority = Integer.parseInt(priorityField.getText());
-        int duration = Integer.parseInt(durationField.getText());
+
+        if (jobNameField.getText().trim().isEmpty()
+                || commandField.getText().trim().isEmpty()
+                || priorityField.getText().trim().isEmpty()
+                || durationField.getText().trim().isEmpty()
+                || startDatePicker.getValue() == null
+                || startHourField.getText().trim().isEmpty()
+                || startMinuteField.getText().trim().isEmpty()
+                || deadlinePicker.getValue() == null
+                || deadlineHourField.getText().trim().isEmpty()
+                || deadlineMinuteField.getText().trim().isEmpty()) {
+            return;
+        }
+        String jobName = jobNameField.getText().trim();
+        String command = commandField.getText().trim();
+        int priority = Integer.parseInt(priorityField.getText().trim());
+        int duration = Integer.parseInt(durationField.getText().trim());
         LocalDate startDate = startDatePicker.getValue();
-        int startHour = Integer.parseInt(startHourField.getText());
-        int startMinute = Integer.parseInt(startMinuteField.getText());
+        int startHour = Integer.parseInt(startHourField.getText().trim());
+        int startMinute = Integer.parseInt(startMinuteField.getText().trim());
         LocalDate deadline = deadlinePicker.getValue();
-        int deadlineHour = Integer.parseInt(deadlineHourField.getText());
-        int deadlineMinute = Integer.parseInt(deadlineMinuteField.getText());
+        int deadlineHour = Integer.parseInt(deadlineHourField.getText().trim());
+        int deadlineMinute = Integer.parseInt(deadlineMinuteField.getText().trim());
 
         LocalDateTime startDateTime =
                 LocalDateTime.of(
@@ -74,14 +117,28 @@ public class AddJobController implements Initializable {
 
         try {
             MainController controller = MainController.getInstance();
-            controller.addProcess(
-                    new Job(
-                            command,
-                            jobName,
-                            startDateTime,
-                            deadlineDateTime,
-                            Duration.ofSeconds(duration),
-                            priority));
+            if (radioConvJob.isSelected()) {
+                controller.addProcess(
+                        new ConvolutionJob(
+                                command,
+                                inputFolder,
+                                outputFolder,
+                                kernelFile,
+                                jobName,
+                                startDateTime,
+                                deadlineDateTime,
+                                Duration.ofSeconds(duration),
+                                priority));
+            } else {
+                controller.addProcess(
+                        new Job(
+                                command,
+                                jobName,
+                                startDateTime,
+                                deadlineDateTime,
+                                Duration.ofSeconds(duration),
+                                priority));
+            }
             ((Stage) bCreate.getScene().getWindow()).close();
 
         } catch (Exception e) {
@@ -90,8 +147,40 @@ public class AddJobController implements Initializable {
         }
     }
 
+    // public JFXRadioButton getSelectedRadioButton() {
+    //     Toggle selectedToggle = processType.getSelectedToggle();
+    //     if (selectedToggle != null) {
+    //         return (JFXRadioButton) selectedToggle;
+    //     }
+    //     return null; // Nijedan nije selektovan
+    // }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        convOptionsHBox.setVisible(false);
+        convOptionsHBox.setManaged(false);
+        bCreate.setVisible(true);
+        bCreate.setManaged(true);
+
+        processType
+                .selectedToggleProperty()
+                .addListener(
+                        (observable, oldToggle, newToggle) -> {
+                            if (newToggle == radioJob) {
+                                // Ako je selektovan "Job" RadioButton
+                                convOptionsHBox.setVisible(false);
+                                convOptionsHBox.setManaged(false);
+                                bCreate.setVisible(true);
+                                bCreate.setManaged(true);
+                            } else if (newToggle == radioConvJob) {
+                                // Ako je selektovan "Convolution" RadioButton
+                                convOptionsHBox.setVisible(true);
+                                convOptionsHBox.setManaged(true);
+                                bCreate.setVisible(true);
+                                bCreate.setManaged(true);
+                            }
+                        });
         startDatePicker.setDayCellFactory(
                 new Callback<DatePicker, DateCell>() {
                     @Override
@@ -129,6 +218,58 @@ public class AddJobController implements Initializable {
                         };
                     }
                 });
+
+        bInputFolder.setOnAction(
+                event -> {
+                    DirectoryChooser directoryChooser = new DirectoryChooser();
+                    directoryChooser.setTitle("Izaberite folder");
+
+                    // Opcionalno: postavljamo početni direktorijum
+                    directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+                    // Prikazujemo dijalog i dobijamo izabrani folder
+                    File selectedDirectory = directoryChooser.showDialog(new Stage());
+
+                    if (selectedDirectory != null) {
+                        inputFolder = selectedDirectory;
+                        bInputFolder.setText(selectedDirectory.getName());
+                    }
+                });
+
+        bOutputFolder.setOnAction(
+                event -> {
+                    DirectoryChooser directoryChooser = new DirectoryChooser();
+                    directoryChooser.setTitle("Izaberite folder");
+
+                    // Opcionalno: postavljamo početni direktorijum
+                    directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+                    // Prikazujemo dijalog i dobijamo izabrani folder
+                    File selectedDirectory = directoryChooser.showDialog(new Stage());
+
+                    if (selectedDirectory != null) {
+                        outputFolder = selectedDirectory;
+                        bOutputFolder.setText(selectedDirectory.getName());
+                    }
+                });
+
+        bChooseKernel.setOnAction(
+                event -> {
+                    FileChooser fileChooser = new FileChooser();
+                    fileChooser.setTitle("Izaberite kernel fajl");
+
+                    // Opcionalno: postavljamo početni direktorijum
+                    fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+                    // Prikazujemo dijalog i dobijamo izabrani folder
+                    File selectedFile = fileChooser.showOpenDialog(new Stage());
+
+                    if (selectedFile != null) {
+                        kernelFile = selectedFile;
+                        bChooseKernel.setText(selectedFile.getName());
+                    }
+                });
+
         applyLimitListener(startHourField, 23);
         applyLimitListener(startMinuteField, 59);
         applyLimitListener(deadlineHourField, 23);

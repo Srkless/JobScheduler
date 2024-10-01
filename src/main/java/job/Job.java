@@ -9,17 +9,23 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 public class Job implements Comparable<Job> {
-    private String command;
-    private String jobName = "Job_";
-    private volatile Status status = Status.PAUSED;
-    private int jobPriority;
+    protected int ID = 0;
+    protected static int IDCounter = 0;
+    protected String command;
+    protected String jobName = "Job_";
+    protected volatile Status status = Status.NOT_STARTED;
+    protected int jobPriority;
     private volatile Process process;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private Duration duration;
-    private volatile RabbitMQHandler rabbitMQ = new RabbitMQHandler();
+    protected LocalDateTime startTime;
+    protected LocalDateTime endTime;
+    protected Duration duration;
+    protected int progress = 0;
+    protected int progressStep = 0;
+    protected volatile RabbitMQHandler rabbitMQ = new RabbitMQHandler();
 
-    private static JobController jobController = new JobController();
+    protected static ProcessController jobController = new ProcessController();
+
+    public Job() {}
 
     public Job(
             String command,
@@ -34,6 +40,7 @@ public class Job implements Comparable<Job> {
         this.startTime = startTime;
         this.endTime = endTime;
         this.duration = duration;
+        this.ID = IDCounter++;
     }
 
     public Job(String command, String jobName, int priority) {
@@ -42,8 +49,28 @@ public class Job implements Comparable<Job> {
         this.jobPriority = priority;
     }
 
+    public int getID() {
+        return ID;
+    }
+
     public LocalDateTime getStartTime() {
         return startTime;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
+    }
+
+    public int getProgressStep() {
+        return progressStep;
+    }
+
+    public void setProgressStep(int progressStep) {
+        this.progressStep = progressStep;
     }
 
     public LocalDateTime getEndTime() {
@@ -113,6 +140,7 @@ public class Job implements Comparable<Job> {
     public void start() {
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command);
         processBuilder.redirectErrorStream(true);
+        progress = Integer.parseInt(command.split(" ")[command.split(" ").length - 1]);
         try {
             this.process = processBuilder.start();
             while (true) {
@@ -120,7 +148,8 @@ public class Job implements Comparable<Job> {
                 try (BufferedReader reader =
                         new BufferedReader(new InputStreamReader(process.getInputStream())); ) {
                     while ((line = reader.readLine()) != null) {
-                        System.out.println(line);
+                        rabbitMQ.write(line, this.jobName);
+                        progressStep = Integer.parseInt(line.split(" - ")[1].split("/")[0]);
                     }
                     break;
                 } catch (IOException e) {
@@ -149,18 +178,25 @@ public class Job implements Comparable<Job> {
 
     // TODO: dodati sa se salje na rabbitMQ
     public void pause() {
-        this.status = Status.PAUSED;
-        jobController.execute("PAUSE", this);
+        if (jobController.execute("PAUSE", this.process)) {
+            this.status = Status.PAUSED;
+            setStatus(Status.PAUSED);
+            rabbitMQ.write("[" + jobName + "]: " + "PAUSED", jobName);
+        }
     }
 
     public void stop() {
-        this.status = Status.STOPPED;
-        jobController.execute("STOP", this);
+        if (jobController.execute("STOP", this.process)) {
+            rabbitMQ.write("[" + jobName + "]: " + "STOPPED", jobName);
+            this.status = Status.STOPPED;
+        }
     }
 
     public void resume() {
-        this.status = Status.RUNNING;
-        jobController.execute("RESUME", this);
+        if (jobController.execute("RESUME", this.process)) {
+            rabbitMQ.write("[" + jobName + "]: " + "RESUMED", jobName);
+            this.status = Status.RUNNING;
+        }
     }
 
     // private void checkStatus() {
@@ -204,6 +240,14 @@ public class Job implements Comparable<Job> {
         return this.jobPriority - job.jobPriority;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (!(obj instanceof Job)) return false;
+        Job job = (Job) obj;
+        return job.ID == this.ID;
+    }
+
     // public static void main(String[] args) {
     //     // Job job =
     //     //         new Job(
@@ -212,7 +256,9 @@ public class Job implements Comparable<Job> {
     //
     //     Job job = new Job("java -cp target/classes jobs.DemoJob", "DemoJob", 1);
     //     Job job2 = new Job("java -cp target/classes jobs.DemoJob", "DemoJob2", 1);
+    //     Job test = new Job("~/test.sh", "Test", 1);
     //
+    //     start();
     //     try {
     //         Thread.sleep(15000);
     //     } catch (InterruptedException e) {
